@@ -1,0 +1,34 @@
+# =========================
+# Quebras de linha
+# =========================
+# Força uso de LF no repositório (padrão Unix)
+* text=auto eol=lf
+
+# =========================
+# Arquivos de código e texto
+# =========================
+*.cs     text diff=csharp
+*.csproj text
+*.sln    text
+*.config text
+*.json   text
+*.xml    text
+*.md     text
+
+# =========================
+# Scripts
+# =========================
+*.sh     text eol=lf
+*.bat    text eol=crlf
+
+# =========================
+# Binários (não converter)
+# =========================
+*.png    binary
+*.jpg    binary
+*.jpeg   binary
+*.gif    binary
+*.pdf    binary
+*.zip    binary
+*.exe    binary
+*.dll    binary

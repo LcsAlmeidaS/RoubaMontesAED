@@ -1,6 +1,6 @@
 namespace RoubaMontesAED.Entities;
 
-public class Baralho
+public class Jogo
 {
     
 }
