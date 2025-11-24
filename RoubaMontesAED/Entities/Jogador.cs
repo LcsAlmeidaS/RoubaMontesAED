@@ -1,5 +1,5 @@
+using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace RoubaMontesAED.Entities
 {
@@ -46,6 +46,11 @@ namespace RoubaMontesAED.Entities
         public int TamanhoDoMonteJogador()
         {
             return _monteJogador.Tamanho();
+        }
+
+        public List<Carta> RetirarMonte()
+        {
+            return _monteJogador.RetirarTodas();
         }
 
         public void AtualizarPosicao(int posicao)

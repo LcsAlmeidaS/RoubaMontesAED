@@ -1,4 +1,5 @@
-using RoubaMontesAED;
+using System;
+using System.Collections.Generic;
 
 namespace RoubaMontesAED.Entities
 {
@@ -36,23 +37,24 @@ namespace RoubaMontesAED.Entities
             return _pilha.Peek();
         }
 
-        public List<Carta> RoubarMonte()
+        public List<Carta> RetirarTodas()
         {
             List<Carta> lista = new List<Carta>();
 
             while (_pilha.Count > 0)
             {
-                Carta removida = _pilha.Pop();
-                lista.Add(removida);
+                Carta carta = _pilha.Pop();
+                lista.Add(carta);
             }
 
             lista.Reverse();
+
             return lista;
         }
 
         public int Tamanho()
         {
-            return _pilha.Count();
+            return _pilha.Count;
         }
 
         public void Limpar()
@@ -62,7 +64,7 @@ namespace RoubaMontesAED.Entities
 
         public List<Carta> GetCartas()
         {
-            return _pilha.ToList();
+            return new List<Carta>(_pilha);
         }
 
         public bool EstahVazia()

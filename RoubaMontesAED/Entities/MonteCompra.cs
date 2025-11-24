@@ -14,29 +14,23 @@ namespace RoubaMontesAED.Entities
             _random = new Random();
         }
 
-        public void CriarBaralho(int quantidadeCartas)
+        public void CriarBaralho(int quantidadeMaximaCartas)
         {
             _cartas.Clear();
 
-            int i;
-            for (i = 1; i <= quantidadeCartas; i++)
+            Naipe[] naipes = (Naipe[])Enum.GetValues(typeof(Naipe));
+
+            int indice = 0;
+
+            while (indice < quantidadeMaximaCartas)
             {
-                int valor = i % 13;
-                if (valor == 0)
-                    valor = 13;
+                int valor = (indice % 13) + 1;
+                Naipe naipe = naipes[indice % naipes.Length];
 
-                Naipe naipe;
-                if (i % 4 == 0)
-                    naipe = Naipe.Copas;
-                else if (i % 4 == 1)
-                    naipe = Naipe.Ouros;
-                else if (i % 4 == 2)
-                    naipe = Naipe.Paus;
-                else
-                    naipe = Naipe.Espadas;
+                Carta carta = new Carta(valor, naipe);
+                _cartas.Add(carta);
 
-                Carta novaCarta = new Carta(valor, naipe);
-                _cartas.Add(novaCarta);
+                indice++;
             }
         }
 

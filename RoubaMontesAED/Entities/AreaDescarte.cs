@@ -1,5 +1,5 @@
+using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace RoubaMontesAED.Entities
 {
@@ -31,10 +31,14 @@ namespace RoubaMontesAED.Entities
         public Carta ProcurarPorValor(int valor)
         {
             int i;
-            for (i = 0; i < _cartasDescarte.Count; i++)
+            int quantidade = _cartasDescarte.Count;
+
+            for (i = 0; i < quantidade; i++)
             {
-                if (_cartasDescarte[i].Valor == valor)
-                    return _cartasDescarte[i];
+                Carta atual = _cartasDescarte[i];
+
+                if (atual.Valor == valor)
+                    return atual;
             }
 
             return null;
