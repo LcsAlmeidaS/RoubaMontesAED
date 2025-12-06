@@ -30,20 +30,21 @@ namespace RoubaMontesAED.Entities
 
         public Carta ProcurarPorValor(int valor)
         {
-            int i;
             int quantidade = _cartasDescarte.Count;
+            Carta atual = null;
 
-            for (i = 0; i < quantidade; i++)
+            for (int i = 0; i < quantidade; i++)
             {
-                Carta atual = _cartasDescarte[i];
+                atual = _cartasDescarte[i];
 
                 if (atual.Valor == valor)
                     return atual;
             }
 
-            return null;
+            return atual;
         }
 
+        //Dnv ta criando uma nova sendo que pode só percorrer a lista? 
         public List<Carta> GetTodas()
         {
             return new List<Carta>(_cartasDescarte);

@@ -22,12 +22,12 @@ namespace RoubaMontesAED.Entities
             _monteJogador = new MonteJogador();
         }
 
-        public void ReceberCartas(IEnumerable<Carta> cartas)
+        public void ReceberCartasRoubadas(IEnumerable<Carta> cartas)
         {
             if (cartas == null)
                 return;
 
-            _monteJogador.ColocarNoTopo(cartas);
+            _monteJogador.ColocarNoTopoMonteRoubado(cartas);
         }
 
         public void ReceberCarta(Carta carta)
@@ -64,6 +64,7 @@ namespace RoubaMontesAED.Entities
             _historicoPosicoes.Enqueue(posicao);
         }
 
+        //Porque passando pra lista? É só percorrer a fila de maneira que mostre os resultados em ordem cronologica(ultima partida primeiro)
         public IEnumerable<int> GetHistorico()
         {
             return _historicoPosicoes.ToList();

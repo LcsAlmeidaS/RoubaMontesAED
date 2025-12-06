@@ -1,4 +1,4 @@
-namespace RoubaMontesAED.Entities
+namespace RoubaMontesAED.Enums
 {
     public enum Naipe
     {

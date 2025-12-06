@@ -12,7 +12,7 @@ namespace RoubaMontesAED.Entities
             _pilha = new Stack<Carta>();
         }
 
-        public void ColocarNoTopo(IEnumerable<Carta> cartas)
+        public void ColocarNoTopoMonteRoubado(IEnumerable<Carta> cartas)
         {
             if (cartas == null)
                 return;
@@ -62,6 +62,7 @@ namespace RoubaMontesAED.Entities
             _pilha.Clear();
         }
 
+        //Não entendi esse porque tá passando pra lista, get cartas de quem? (Se for do jogador só percorrer a pilha não?)
         public List<Carta> GetCartas()
         {
             return new List<Carta>(_pilha);

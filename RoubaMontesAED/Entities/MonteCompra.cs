@@ -1,3 +1,4 @@
+using RoubaMontesAED.Enums;
 using System;
 using System.Collections.Generic;
 
@@ -16,7 +17,10 @@ namespace RoubaMontesAED.Entities
 
         public void CriarBaralho(int quantidadeMaximaCartas)
         {
-            _cartas.Clear();
+            if (_cartas.Count > 0)
+            {
+                _cartas.Clear();
+            }
 
             Naipe[] naipes = (Naipe[])Enum.GetValues(typeof(Naipe));
 
@@ -24,6 +28,7 @@ namespace RoubaMontesAED.Entities
 
             while (indice < quantidadeMaximaCartas)
             {
+                // Porque valor tá com essa conta (Entendi que são os valores possíveis do baralho começando por 1)
                 int valor = (indice % 13) + 1;
                 Naipe naipe = naipes[indice % naipes.Length];
 
@@ -41,6 +46,7 @@ namespace RoubaMontesAED.Entities
             while (n > 1)
             {
                 n--;
+                //Porque n + 1? Pra trocar a semente do random? 
                 int k = _random.Next(n + 1);
 
                 Carta temp = _cartas[k];
@@ -49,9 +55,12 @@ namespace RoubaMontesAED.Entities
             }
         }
 
+        //Responsável por gerar a carta da vez
         public Carta Comprar()
         {
-            if (_cartas.Count == 0)
+            // Se o monte de compras for 0 acabou o jogo (Conferir verificação se é necessária) --> Coloquei o método pois tava duplicando
+                                                                                                   //Código
+            if (EstaVazio())
                 return null;
 
             int ultimoIndice = _cartas.Count - 1;
