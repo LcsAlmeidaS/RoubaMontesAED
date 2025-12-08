@@ -1,5 +1,6 @@
 ﻿using RoubaMontesAED.Entities;
 using RoubaMontesAED.IO;
+using System;
 
 namespace RoubaMontesAED.Services;
 
@@ -47,7 +48,20 @@ public class JogoService
 
         _logger.Registrar($"Jogador sorteado para iniciar: {jogadorEscolhido.Nome}");
 
-        return Jogadores[indiceJogador];
+        return jogadorEscolhido;
+    }
+
+    public void ExecutarPartida()
+    {
+        Jogador jogadorAtual = JogadorIniciaPartida();
+
+        while (!MonteCompra.EstaVazio())
+        {
+            ExecutarTurno(jogadorAtual);
+            jogadorAtual = PassarVez(jogadorAtual);
+        }
+
+        RegistrarRankingFinal();
     }
 
 
@@ -67,6 +81,62 @@ public class JogoService
         return proximo;
     }
 
+    private void ExecutarTurno(Jogador jogadorAtual)
+    {
+        Carta cartaDaVez = JogadaPadrao();
+        if (cartaDaVez == null)
+            return;
+
+        bool continuarJogada = true;
+
+        while (continuarJogada)
+        {
+            continuarJogada = false;
+
+            Jogador jogadorRoubado = VerificarRoubo(jogadorAtual, cartaDaVez);
+            if (jogadorRoubado != null)
+            {
+                ExecutarRoubo(jogadorAtual, jogadorRoubado, cartaDaVez);
+                cartaDaVez = JogadaPadrao();
+
+                if (cartaDaVez == null)
+                    return;
+
+                continuarJogada = true;
+                continue;
+            }
+
+            Carta cartaDescarte = AreaDescarte.ProcurarPorValor(cartaDaVez.Valor);
+            if (cartaDescarte != null)
+            {
+                ExecutarCapturaDescarte(jogadorAtual, cartaDaVez, cartaDescarte);
+                cartaDaVez = JogadaPadrao();
+
+                if (cartaDaVez == null)
+                    return;
+
+
+                continuarJogada = true;
+                continue;
+            }
+
+            if (PodeEmpilhar(jogadorAtual, cartaDaVez))
+            {
+                ExecutarEmpilhamento(jogadorAtual, cartaDaVez);
+                cartaDaVez = JogadaPadrao();
+
+                if (cartaDaVez == null)
+                    return;
+
+                continuarJogada = true;
+                continue;
+            }
+
+            ExecutarDescarte(jogadorAtual, cartaDaVez);
+            return;
+        }
+    }
+
     public Carta JogadaPadrao()
     {
         Carta carta = MonteCompra.Comprar();
@@ -77,6 +147,52 @@ public class JogoService
         return carta;
     }
 
+    private Jogador VerificarRoubo(Jogador jogadorAtual, Carta cartaDaVez)
+    {
+        // to do: implementar lógica de verificação de roubo
+    }
+
+    private void ExecutarRoubo(Jogador quemRouba, Jogador quemPerde, Carta cartaDaVez)
+    {
+        List<Carta> cartasRoubadas = quemPerde.RetirarMonte();
+
+        quemRouba.ReceberCartasRoubadas(cartasRoubadas);
+        quemRouba.ReceberCarta(cartaDaVez);
+
+        RegistrarRoubo(quemRouba, quemPerde);
+    }
+
+    private void ExecutarCapturaDescarte(Jogador jogador, Carta cartaDaVez, Carta descarte)
+    {
+        AreaDescarte.Remover(descarte);
+
+        jogador.ReceberCarta(descarte);
+        jogador.ReceberCarta(cartaDaVez);
+
+        RegistrarCapturaDescarte(jogador, descarte);
+    }
+
+    private bool PodeEmpilhar(Jogador jogador, Carta cartaDaVez)
+    {
+        Carta topo = jogador.TopoDoMonteJogador();
+
+        if (topo == null)
+            return false;
+
+        return topo.Valor == cartaDaVez.Valor;
+    }
+
+    private void ExecutarEmpilhamento(Jogador jogador, Carta carta)
+    {
+        jogador.ReceberCarta(carta);
+        _logger.Registrar($"{jogador.Nome} empilhou a carta no próprio monte.");
+    }
+
+    private void ExecutarDescarte(Jogador jogador, Carta carta)
+    {
+        AreaDescarte.Adicionar(carta);
+        RegistrarDescarte(jogador, carta);
+    }
 
     public Jogador MaiorMonte()
     {
@@ -97,6 +213,11 @@ public class JogoService
             _logger.Registrar($"Jogador com maior monte no momento: {maior.Nome} ({maiorQtd} cartas)");
 
         return maior;
+    }
+
+    private void RegistrarRankingFinal()
+    {
+        // to do: implementar lógica de ranking final
     }
 
     public void RegistrarRoubo(Jogador quemRouba, Jogador quemPerde)
