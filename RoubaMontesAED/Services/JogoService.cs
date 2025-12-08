@@ -4,7 +4,6 @@ using System;
 
 namespace RoubaMontesAED.Services;
 
-// Classe que vai conter toda lógica do jogo. (Modularizar o código)
 public class JogoService
 {
     private int _quantidadeJogadores;
@@ -26,23 +25,38 @@ public class JogoService
         _logger = new LogPartida();
     }
 
+    public void DefinirJogadores(Jogador[] jogadores)
+    {
+        Jogadores = jogadores;
+
+        string nomes = "";
+        for (int i = 0; i < jogadores.Length; i++)
+        {
+            nomes += jogadores[i].Nome;
+
+            if (i < jogadores.Length - 1)
+            {
+                nomes += ", ";
+            }
+        }
+
+        _logger.Registrar($"Jogadores definidos: {nomes}");
+    }
+
     public void CriarBaralho()
     {
-        // log que foi criado o baralho
         MonteCompra.CriarBaralho(_quantidadeCartasPermitidas);
         _logger.Registrar($"Baralho criado com {_quantidadeCartasPermitidas} cartas.");
     }
 
     public void EmbaralharCartas()
     {
-        // log que foi embaralhado
         MonteCompra.Embaralhar();
         _logger.Registrar("Baralho embaralhado.");
     }
 
     public Jogador JogadorIniciaPartida()
     {
-        // log que indica qual jogador foi sorteado para começar a partida (Depois vai em sentido horário).
         int indiceJogador = random.Next(0, _quantidadeJogadores);
         Jogador jogadorEscolhido = Jogadores[indiceJogador];
 
@@ -149,8 +163,39 @@ public class JogoService
 
     private Jogador VerificarRoubo(Jogador jogadorAtual, Carta cartaDaVez)
     {
-        // to do: implementar lógica de verificação de roubo
+        List<Jogador> candidatos = new List<Jogador>();
+        int maiorMonte = -1;
+
+        foreach (Jogador j in Jogadores)
+        {
+            if (j == null || j == jogadorAtual)
+                continue;
+
+            Carta topo = j.TopoDoMonteJogador();
+            if (topo == null || topo.Valor != cartaDaVez.Valor)
+                continue;
+
+            int tamanho = j.TamanhoDoMonteJogador();
+
+            if (tamanho > maiorMonte)
+            {
+                maiorMonte = tamanho;
+                candidatos.Clear();
+                candidatos.Add(j);
+            }
+            else if (tamanho == maiorMonte)
+            {
+                candidatos.Add(j);
+            }
+        }
+
+        if (candidatos.Count == 0)
+            return null;
+
+        int escolha = random.Next(0, candidatos.Count);
+        return candidatos[escolha];
     }
+
 
     private void ExecutarRoubo(Jogador quemRouba, Jogador quemPerde, Carta cartaDaVez)
     {
@@ -215,9 +260,13 @@ public class JogoService
         return maior;
     }
 
-    private void RegistrarRankingFinal()
+    private void RankingFinal()
     {
-        // to do: implementar lógica de ranking final
+
+    }
+    public IEnumerable<int> PesquisarHistoricoJogador(string nomeJogador)
+    {
+
     }
 
     public void RegistrarRoubo(Jogador quemRouba, Jogador quemPerde)
@@ -233,16 +282,5 @@ public class JogoService
     public void RegistrarDescarte(Jogador jogador, Carta carta)
     {
         _logger.Registrar($"{jogador.Nome} descartou: {carta}");
-    }
-
-    public void RankingPartida()
-    {
-        _logger.Registrar("===== RANKING FINAL DA PARTIDA =====");
-
-    }
-
-    public IEnumerable<int> PesquisarHistoricoJogador(string nomeJogador)
-    {
-
     }
 }

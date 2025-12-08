@@ -17,25 +17,19 @@ namespace RoubaMontesAED.Entities
 
         public void CriarBaralho(int quantidadeMaximaCartas)
         {
-            if (_cartas.Count > 0)
+            if (quantidadeMaximaCartas <= 0)
+                throw new ArgumentException("Quantidade de cartas deve ser maior que zero.");
+
+            _cartas.Clear();
+
+            Naipe[] naipes = { Naipe.Ouros, Naipe.Espadas, Naipe.Copas, Naipe.Paus };
+
+            for (int i = 0; i < quantidadeMaximaCartas; i++)
             {
-                _cartas.Clear();
-            }
+                int valor = (i % 13) + 1;
+                Naipe naipe = naipes[i % naipes.Length];
 
-            Naipe[] naipes = (Naipe[])Enum.GetValues(typeof(Naipe));
-
-            int indice = 0;
-
-            while (indice < quantidadeMaximaCartas)
-            {
-                // Porque valor tá com essa conta (Entendi que são os valores possíveis do baralho começando por 1)
-                int valor = (indice % 13) + 1;
-                Naipe naipe = naipes[indice % naipes.Length];
-
-                Carta carta = new Carta(valor, naipe);
-                _cartas.Add(carta);
-
-                indice++;
+                _cartas.Add(new Carta(valor, naipe));
             }
         }
 
@@ -46,7 +40,6 @@ namespace RoubaMontesAED.Entities
             while (n > 1)
             {
                 n--;
-                //Porque n + 1? Pra trocar a semente do random? 
                 int k = _random.Next(n + 1);
 
                 Carta temp = _cartas[k];
@@ -55,11 +48,8 @@ namespace RoubaMontesAED.Entities
             }
         }
 
-        //Responsável por gerar a carta da vez
         public Carta Comprar()
         {
-            // Se o monte de compras for 0 acabou o jogo (Conferir verificação se é necessária) --> Coloquei o método pois tava duplicando
-                                                                                                   //Código
             if (EstaVazio())
                 return null;
 

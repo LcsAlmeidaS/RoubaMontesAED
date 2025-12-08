@@ -44,10 +44,9 @@ namespace RoubaMontesAED.Entities
             return atual;
         }
 
-        //Dnv ta criando uma nova sendo que pode só percorrer a lista? 
         public List<Carta> GetTodas()
         {
-            return new List<Carta>(_cartasDescarte);
+            return _cartasDescarte;
         }
 
         public int Quantidade()

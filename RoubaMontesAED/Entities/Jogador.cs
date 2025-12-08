@@ -64,10 +64,9 @@ namespace RoubaMontesAED.Entities
             _historicoPosicoes.Enqueue(posicao);
         }
 
-        //Porque passando pra lista? É só percorrer a fila de maneira que mostre os resultados em ordem cronologica(ultima partida primeiro)
         public IEnumerable<int> GetHistorico()
         {
-            return _historicoPosicoes.ToList();
+            return _historicoPosicoes.Reverse();
         }
 
         public override string ToString()

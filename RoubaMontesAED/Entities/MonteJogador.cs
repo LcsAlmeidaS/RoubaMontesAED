@@ -62,10 +62,9 @@ namespace RoubaMontesAED.Entities
             _pilha.Clear();
         }
 
-        //Não entendi esse porque tá passando pra lista, get cartas de quem? (Se for do jogador só percorrer a pilha não?)
-        public List<Carta> GetCartas()
+        public Stack<Carta> GetCartas()
         {
-            return new List<Carta>(_pilha);
+            return _pilha;
         }
 
         public bool EstahVazia()
