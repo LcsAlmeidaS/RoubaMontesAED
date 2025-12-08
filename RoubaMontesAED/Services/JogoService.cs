@@ -76,6 +76,8 @@ public class JogoService
         }
 
         RegistrarRankingFinal();
+
+        SalvarLogAutomatico();
     }
 
 
@@ -283,4 +285,19 @@ public class JogoService
     {
         _logger.Registrar($"{jogador.Nome} descartou: {carta}");
     }
+
+    public void SalvarLogAutomatico()
+    {
+        string pastaLogs = "Logs";
+
+        if (!Directory.Exists(pastaLogs))
+            Directory.CreateDirectory(pastaLogs);
+
+        string nomeArquivo = "log_" + DateTime.Now.ToString("yyyyMMdd_HHmmss") + ".txt";
+
+        string caminhoFinal = pastaLogs + "/" + nomeArquivo;
+
+        _logger.SalvarParaArquivo(caminhoFinal);
+    }
+
 }
