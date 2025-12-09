@@ -1,7 +1,5 @@
 ﻿using RoubaMontesAED.Entities;
 using RoubaMontesAED.IO;
-using System;
-using System.Runtime.CompilerServices;
 
 namespace RoubaMontesAED.Services;
 
@@ -278,22 +276,9 @@ public class JogoService
 
     private string RankingFinal()
     {
-        int esq = 0, dir = Jogadores.Length;
-        string ranking = null;
-
-        OrdenadorService.OrdenarRanking(Jogadores, esq, dir);
-
-        for (int i = 0; i < Jogadores.Length; i++)
-        {
-            ranking = $"Ranking da partida: \n{Jogadores[i].ToString()}";
-            Jogadores[i].AtualizarPosicao(i + 1);
-        }
-
-
-        if (ranking != null)
-            _logger.Registrar($"Ranking final da partida: {ranking}");
-
-        return ranking!;
+        string ranking = RankingService.GerarRankingFinal(Jogadores);
+        _logger.Registrar(ranking);
+        return ranking;
     }
 
     public IEnumerable<int> PesquisarHistoricoJogador(string nomeJogador)
@@ -331,6 +316,18 @@ public class JogoService
     public void RegistrarDescarte(Jogador jogador, Carta carta)
     {
         _logger.Registrar($"{jogador.Nome} descartou: {carta}");
+    }
+
+    public void SalvarLog(string nomeArquivo)
+    {
+        string pastaLogs = "Logs";
+
+        if (!Directory.Exists(pastaLogs))
+            Directory.CreateDirectory(pastaLogs);
+
+        string caminhoFinal = pastaLogs + "/" + nomeArquivo;
+
+        _logger.SalvarParaArquivo(caminhoFinal);
     }
 
     public void SalvarLogAutomatico()
