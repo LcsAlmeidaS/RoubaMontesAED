@@ -1,5 +1,4 @@
-using System;
-using System.Collections.Generic;
+using RoubaMontesAED.Enums;
 
 namespace RoubaMontesAED.Entities
 {
@@ -16,21 +15,19 @@ namespace RoubaMontesAED.Entities
 
         public void CriarBaralho(int quantidadeMaximaCartas)
         {
+            if (quantidadeMaximaCartas <= 0)
+                throw new ArgumentException("Quantidade de cartas deve ser maior que zero.");
+
             _cartas.Clear();
 
-            Naipe[] naipes = (Naipe[])Enum.GetValues(typeof(Naipe));
+            Naipe[] naipes = { Naipe.Ouros, Naipe.Espadas, Naipe.Copas, Naipe.Paus };
 
-            int indice = 0;
-
-            while (indice < quantidadeMaximaCartas)
+            for (int i = 0; i < quantidadeMaximaCartas; i++)
             {
-                int valor = (indice % 13) + 1;
-                Naipe naipe = naipes[indice % naipes.Length];
+                int valor = (i % 13) + 1;
+                Naipe naipe = naipes[i % naipes.Length];
 
-                Carta carta = new Carta(valor, naipe);
-                _cartas.Add(carta);
-
-                indice++;
+                _cartas.Add(new Carta(valor, naipe));
             }
         }
 
@@ -51,7 +48,7 @@ namespace RoubaMontesAED.Entities
 
         public Carta Comprar()
         {
-            if (_cartas.Count == 0)
+            if (EstaVazio())
                 return null;
 
             int ultimoIndice = _cartas.Count - 1;

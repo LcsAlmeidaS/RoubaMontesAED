@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-
 namespace RoubaMontesAED.Entities
 {
     public class Jogador
@@ -17,17 +14,16 @@ namespace RoubaMontesAED.Entities
             Nome = nome;
             Posicao = 0;
             QuantidadeCartasUltimaPartida = 0;
-
             _historicoPosicoes = new Queue<int>();
             _monteJogador = new MonteJogador();
         }
 
-        public void ReceberCartas(IEnumerable<Carta> cartas)
+        public void ReceberCartasRoubadas(IEnumerable<Carta> cartas)
         {
             if (cartas == null)
                 return;
 
-            _monteJogador.ColocarNoTopo(cartas);
+            _monteJogador.ColocarNoTopoMonteRoubado(cartas);
         }
 
         public void ReceberCarta(Carta carta)
@@ -66,12 +62,12 @@ namespace RoubaMontesAED.Entities
 
         public IEnumerable<int> GetHistorico()
         {
-            return _historicoPosicoes.ToList();
+            return _historicoPosicoes.Reverse();
         }
 
         public override string ToString()
         {
-            return Nome + " - Posição: " + Posicao + ", Cartas: " + QuantidadeCartasUltimaPartida;
+            return Nome + " - Posição: " + Posicao + "° Lugar, Cartas: " + QuantidadeCartasUltimaPartida;
         }
     }
 }

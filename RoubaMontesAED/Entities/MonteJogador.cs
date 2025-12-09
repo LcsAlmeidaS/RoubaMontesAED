@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-
 namespace RoubaMontesAED.Entities
 {
     public class MonteJogador
@@ -12,13 +9,15 @@ namespace RoubaMontesAED.Entities
             _pilha = new Stack<Carta>();
         }
 
-        public void ColocarNoTopo(IEnumerable<Carta> cartas)
+        public void ColocarNoTopoMonteRoubado(IEnumerable<Carta> cartas)
         {
             if (cartas == null)
                 return;
 
             foreach (Carta carta in cartas)
+            {
                 _pilha.Push(carta);
+            }
         }
 
         public void ColocarNoTopo(Carta carta)
@@ -62,9 +61,9 @@ namespace RoubaMontesAED.Entities
             _pilha.Clear();
         }
 
-        public List<Carta> GetCartas()
+        public Stack<Carta> GetCartas()
         {
-            return new List<Carta>(_pilha);
+            return _pilha;
         }
 
         public bool EstahVazia()
