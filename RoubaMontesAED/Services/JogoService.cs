@@ -76,11 +76,10 @@ public class JogoService
             jogadorAtual = PassarVez(jogadorAtual);
         }
 
-        RegistrarRankingFinal();
+        RankingFinal();
 
         SalvarLogAutomatico();
     }
-
 
     public Jogador PassarVez(Jogador jogadorAtual)
     {
@@ -104,6 +103,9 @@ public class JogoService
         if (cartaDaVez == null)
             return;
 
+        _logger.RegistrarToposDosMontes(Jogadores);
+        _logger.RegistrarCartasDescarte(AreaDescarte);
+
         bool continuarJogada = true;
 
         while (continuarJogada)
@@ -114,8 +116,11 @@ public class JogoService
             if (jogadorRoubado != null)
             {
                 ExecutarRoubo(jogadorAtual, jogadorRoubado, cartaDaVez);
-                cartaDaVez = JogadaPadrao();
 
+                _logger.RegistrarToposDosMontes(Jogadores);
+                _logger.RegistrarCartasDescarte(AreaDescarte);
+
+                cartaDaVez = JogadaPadrao();
                 if (cartaDaVez == null)
                     return;
 
@@ -127,11 +132,13 @@ public class JogoService
             if (cartaDescarte != null)
             {
                 ExecutarCapturaDescarte(jogadorAtual, cartaDaVez, cartaDescarte);
-                cartaDaVez = JogadaPadrao();
 
+                _logger.RegistrarToposDosMontes(Jogadores);
+                _logger.RegistrarCartasDescarte(AreaDescarte);
+
+                cartaDaVez = JogadaPadrao();
                 if (cartaDaVez == null)
                     return;
-
 
                 continuarJogada = true;
                 continue;
@@ -140,8 +147,11 @@ public class JogoService
             if (PodeEmpilhar(jogadorAtual, cartaDaVez))
             {
                 ExecutarEmpilhamento(jogadorAtual, cartaDaVez);
-                cartaDaVez = JogadaPadrao();
 
+                _logger.RegistrarToposDosMontes(Jogadores);
+                _logger.RegistrarCartasDescarte(AreaDescarte);
+
+                cartaDaVez = JogadaPadrao();
                 if (cartaDaVez == null)
                     return;
 
@@ -150,6 +160,10 @@ public class JogoService
             }
 
             ExecutarDescarte(jogadorAtual, cartaDaVez);
+
+            _logger.RegistrarToposDosMontes(Jogadores);
+            _logger.RegistrarCartasDescarte(AreaDescarte);
+
             return;
         }
     }
@@ -198,7 +212,6 @@ public class JogoService
         int escolha = random.Next(0, candidatos.Count);
         return candidatos[escolha];
     }
-
 
     private void ExecutarRoubo(Jogador quemRouba, Jogador quemPerde, Carta cartaDaVez)
     {
@@ -263,7 +276,6 @@ public class JogoService
         return maior;
     }
 
-    //Chamar na hora de finalizar a partida e apresentar o ranking final da partida (Pós ordenação por quantidade de carts no monte de cada jogador)
     private string RankingFinal()
     {
         int esq = 0, dir = Jogadores.Length;
@@ -334,5 +346,4 @@ public class JogoService
 
         _logger.SalvarParaArquivo(caminhoFinal);
     }
-
 }
