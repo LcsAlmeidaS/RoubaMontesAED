@@ -1,6 +1,7 @@
 ﻿using RoubaMontesAED.Entities;
 using RoubaMontesAED.IO;
 using System;
+using System.Runtime.CompilerServices;
 
 namespace RoubaMontesAED.Services;
 
@@ -262,13 +263,47 @@ public class JogoService
         return maior;
     }
 
-    private void RankingFinal()
+    //Chamar na hora de finalizar a partida e apresentar o ranking final da partida (Pós ordenação por quantidade de carts no monte de cada jogador)
+    private string RankingFinal()
     {
+        int esq = 0, dir = Jogadores.Length;
+        string ranking = null;
 
+        OrdenadorService.OrdenarRanking(Jogadores, esq, dir);
+
+        for (int i = 0; i < Jogadores.Length; i++)
+        {
+            ranking = $"Ranking da partida: \n{Jogadores[i].ToString()}";
+            Jogadores[i].AtualizarPosicao(i + 1);
+        }
+
+
+        if (ranking != null)
+            _logger.Registrar($"Ranking final da partida: {ranking}");
+
+        return ranking!;
     }
+
     public IEnumerable<int> PesquisarHistoricoJogador(string nomeJogador)
     {
+        Jogador pesquisado = null;
+        IEnumerable<int> posicoes = null;
+        foreach (Jogador j in Jogadores)
+        {
+            if (j.Nome.Equals(nomeJogador))
+            {
+                pesquisado = j;
+                posicoes = pesquisado.GetHistorico();
+            }
+        }
 
+        if (posicoes != null)
+            foreach (int posicao in posicoes)
+            {
+                _logger.Registrar($"Historico do jogador {nomeJogador}: \n {posicao + "°, "}");
+            }
+
+        return posicoes!;
     }
 
     public void RegistrarRoubo(Jogador quemRouba, Jogador quemPerde)

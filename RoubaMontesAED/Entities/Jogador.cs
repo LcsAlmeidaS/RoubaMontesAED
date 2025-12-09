@@ -17,7 +17,6 @@ namespace RoubaMontesAED.Entities
             Nome = nome;
             Posicao = 0;
             QuantidadeCartasUltimaPartida = 0;
-
             _historicoPosicoes = new Queue<int>();
             _monteJogador = new MonteJogador();
         }
@@ -66,12 +65,12 @@ namespace RoubaMontesAED.Entities
 
         public IEnumerable<int> GetHistorico()
         {
-            return _historicoPosicoes.Reverse();
+            return _historicoPosicoes.Reverse();                                                                                                                    
         }
 
         public override string ToString()
         {
-            return Nome + " - Posição: " + Posicao + ", Cartas: " + QuantidadeCartasUltimaPartida;
+            return Nome + " - Posição: " + Posicao + "° Lugar, Cartas: " + QuantidadeCartasUltimaPartida;
         }
     }
 }
