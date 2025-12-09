@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-
 namespace RoubaMontesAED.Entities
 {
     public class AreaDescarte
@@ -30,18 +27,15 @@ namespace RoubaMontesAED.Entities
 
         public Carta ProcurarPorValor(int valor)
         {
-            int quantidade = _cartasDescarte.Count;
-            Carta atual = null;
-
-            for (int i = 0; i < quantidade; i++)
+            for (int i = 0; i < _cartasDescarte.Count; i++)
             {
-                atual = _cartasDescarte[i];
+                Carta c = _cartasDescarte[i];
 
-                if (atual.Valor == valor)
-                    return atual;
+                if (c.Valor == valor)
+                    return c;
             }
 
-            return atual;
+            return null;
         }
 
         public List<Carta> GetTodas()

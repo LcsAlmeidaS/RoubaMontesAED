@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-
 namespace RoubaMontesAED.Entities
 {
     public class Jogador
@@ -65,7 +62,7 @@ namespace RoubaMontesAED.Entities
 
         public IEnumerable<int> GetHistorico()
         {
-            return _historicoPosicoes.Reverse();                                                                                                                    
+            return _historicoPosicoes.Reverse();
         }
 
         public override string ToString()

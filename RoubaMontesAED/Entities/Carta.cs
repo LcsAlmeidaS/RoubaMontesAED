@@ -1,6 +1,5 @@
 using RoubaMontesAED.Enums;
 
-
 namespace RoubaMontesAED.Entities;
 
 public class Carta

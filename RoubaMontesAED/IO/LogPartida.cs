@@ -1,7 +1,4 @@
 using RoubaMontesAED.Entities;
-using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Text;
 
 namespace RoubaMontesAED.IO
@@ -64,6 +61,14 @@ namespace RoubaMontesAED.IO
 
             Registrar(sb.ToString());
         }
+
+        public void SeparadorJogada(string nomeJogador)
+        {
+            Registrar("\n----------------------------------------------");
+            Registrar($"JOGADA DE: {nomeJogador.ToUpper()}");
+            Registrar("----------------------------------------------\n");
+        }
+
 
         public void SalvarParaArquivo(string caminho)
         {

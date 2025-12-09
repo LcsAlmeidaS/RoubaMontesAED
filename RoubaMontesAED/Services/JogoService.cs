@@ -1,346 +1,302 @@
 ﻿using RoubaMontesAED.Entities;
 using RoubaMontesAED.IO;
+using System.Text;
 
-namespace RoubaMontesAED.Services;
-
-public class JogoService
+namespace RoubaMontesAED.Services
 {
-    private int _quantidadeJogadores;
-    private int _quantidadeCartasPermitidas;
-    private MonteCompra MonteCompra;
-    private AreaDescarte AreaDescarte;
-    private Jogador[] Jogadores;
-    private Random random;
-    private LogPartida _logger;
-
-    public JogoService(int quantidadeJogadores, int quantidadeCartasPermitidas)
+    public class JogoService
     {
-        this._quantidadeJogadores = quantidadeJogadores;
-        this._quantidadeCartasPermitidas = quantidadeCartasPermitidas;
-        this.MonteCompra = new MonteCompra();
-        this.AreaDescarte = new AreaDescarte();
-        this.Jogadores = new Jogador[quantidadeJogadores];
-        this.random = new Random();
-        _logger = new LogPartida();
-    }
+        private int _quantidadeJogadores;
+        private MonteCompra MonteCompra;
+        private AreaDescarte AreaDescarte;
+        private Jogador[] Jogadores;
+        private Random random;
+        private LogPartida _logger;
+        private int indiceJogadorInicial;
 
-    public void DefinirJogadores(Jogador[] jogadores)
-    {
-        Jogadores = jogadores;
-
-        string nomes = "";
-        for (int i = 0; i < jogadores.Length; i++)
+        public JogoService(int quantidadeJogadores)
         {
-            nomes += jogadores[i].Nome;
+            _quantidadeJogadores = quantidadeJogadores;
+            MonteCompra = new MonteCompra();
+            AreaDescarte = new AreaDescarte();
+            Jogadores = new Jogador[quantidadeJogadores];
+            random = new Random();
+            _logger = new LogPartida();
+        }
 
-            if (i < jogadores.Length - 1)
+        public void DefinirJogadores(Jogador[] jogadores)
+        {
+            Jogadores = jogadores;
+
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < jogadores.Length; i++)
             {
-                nomes += ", ";
+                sb.Append(jogadores[i].Nome);
+                if (i < jogadores.Length - 1)
+                    sb.Append(", ");
+            }
+
+            _logger.Registrar("Jogadores definidos: " + sb.ToString());
+        }
+
+        public void CriarBaralho(int quantidade)
+        {
+            MonteCompra.CriarBaralho(quantidade);
+            _logger.Registrar("Baralho criado com " + quantidade + " cartas.");
+        }
+
+        public void Embaralhar()
+        {
+            MonteCompra.Embaralhar();
+            _logger.Registrar("Baralho embaralhado.");
+        }
+
+        public void SortearJogadorInicial()
+        {
+            indiceJogadorInicial = random.Next(0, Jogadores.Length);
+            _logger.Registrar("Jogador sorteado para iniciar: " + Jogadores[indiceJogadorInicial].Nome);
+        }
+
+        public void IniciarPartida()
+        {
+            Jogador atual = Jogadores[indiceJogadorInicial];
+
+            while (!MonteCompra.EstaVazio())
+            {
+                ExecutarTurno(atual);
+                if (!MonteCompra.EstaVazio())
+                {
+                    atual = PassarVez(atual);
+                }
+            }
+
+            string ranking = RankingService.GerarRankingFinal(Jogadores);
+            _logger.Registrar(ranking);
+        }
+
+        private Jogador PassarVez(Jogador jogadorAtual)
+        {
+            int indice = 0;
+
+            for (int i = 0; i < Jogadores.Length; i++)
+            {
+                if (Jogadores[i] == jogadorAtual)
+                {
+                    indice = i;
+                    break;
+                }
+            }
+
+            int proximoIndice = (indice + 1) % Jogadores.Length;
+            Jogador proximo = Jogadores[proximoIndice];
+
+            _logger.Registrar("Passando a vez: " + jogadorAtual.Nome + " → " + proximo.Nome);
+            return proximo;
+        }
+
+        private void ExecutarTurno(Jogador jogadorAtual)
+        {
+            Carta cartaDaVez = ComprarCarta();
+            if (cartaDaVez == null)
+                return;
+
+            bool continuar = true;
+
+            while (continuar && cartaDaVez != null)
+            {
+                continuar = false;
+
+                _logger.SeparadorJogada(jogadorAtual.Nome);
+                AtualizarEstadoVisual();
+
+                Jogador alvoRoubo = VerificarRoubo(jogadorAtual, cartaDaVez);
+                if (alvoRoubo != null)
+                {
+                    ExecutarRoubo(jogadorAtual, alvoRoubo, cartaDaVez);
+                    AtualizarEstadoVisual();
+
+                    cartaDaVez = ComprarCarta();
+                    continuar = cartaDaVez != null;
+                    continue;
+                }
+
+                Carta cartaDescarte = AreaDescarte.ProcurarPorValor(cartaDaVez.Valor);
+                if (cartaDescarte != null)
+                {
+                    ExecutarCapturaDescarte(jogadorAtual, cartaDaVez, cartaDescarte);
+                    AtualizarEstadoVisual();
+
+                    cartaDaVez = ComprarCarta();
+                    continuar = cartaDaVez != null;
+                    continue;
+                }
+
+                if (PodeEmpilhar(jogadorAtual, cartaDaVez))
+                {
+                    jogadorAtual.ReceberCarta(cartaDaVez);
+                    _logger.Registrar(jogadorAtual.Nome + " empilhou a carta no próprio monte.");
+                    AtualizarEstadoVisual();
+
+                    cartaDaVez = ComprarCarta();
+                    continuar = cartaDaVez != null;
+                    continue;
+                }
+
+                ExecutarDescarte(jogadorAtual, cartaDaVez);
+                AtualizarEstadoVisual();
+                _logger.Registrar("Jogada encerrada.");
+
+                return;
             }
         }
 
-        _logger.Registrar($"Jogadores definidos: {nomes}");
-    }
-
-    public void CriarBaralho()
-    {
-        MonteCompra.CriarBaralho(_quantidadeCartasPermitidas);
-        _logger.Registrar($"Baralho criado com {_quantidadeCartasPermitidas} cartas.");
-    }
-
-    public void EmbaralharCartas()
-    {
-        MonteCompra.Embaralhar();
-        _logger.Registrar("Baralho embaralhado.");
-    }
-
-    public Jogador JogadorIniciaPartida()
-    {
-        int indiceJogador = random.Next(0, _quantidadeJogadores);
-        Jogador jogadorEscolhido = Jogadores[indiceJogador];
-
-        _logger.Registrar($"Jogador sorteado para iniciar: {jogadorEscolhido.Nome}");
-
-        return jogadorEscolhido;
-    }
-
-    public void ExecutarPartida()
-    {
-        Jogador jogadorAtual = JogadorIniciaPartida();
-
-        while (!MonteCompra.EstaVazio())
+        private Carta ComprarCarta()
         {
-            ExecutarTurno(jogadorAtual);
-            jogadorAtual = PassarVez(jogadorAtual);
+            Carta carta = MonteCompra.Comprar();
+            if (carta != null)
+            {
+                _logger.Registrar("Jogador comprou a carta: " + carta.ToString());
+            }
+            return carta;
         }
 
-        RankingFinal();
-
-        SalvarLogAutomatico();
-    }
-
-    public Jogador PassarVez(Jogador jogadorAtual)
-    {
-        int indiceJogadorAtual = Array.IndexOf(Jogadores, jogadorAtual);
-        Jogador proximo;
-
-        if (indiceJogadorAtual == Jogadores.Length - 1)
+        private void AtualizarEstadoVisual()
         {
-            proximo = Jogadores[0];
-        }
-
-        proximo = Jogadores[(indiceJogadorAtual + 1) % Jogadores.Length];
-        _logger.Registrar($"Passando a vez: {jogadorAtual.Nome} → {proximo.Nome}");
-
-        return proximo;
-    }
-
-    private void ExecutarTurno(Jogador jogadorAtual)
-    {
-        Carta cartaDaVez = JogadaPadrao();
-        if (cartaDaVez == null)
-            return;
-
-        _logger.RegistrarToposDosMontes(Jogadores);
-        _logger.RegistrarCartasDescarte(AreaDescarte);
-
-        bool continuarJogada = true;
-
-        while (continuarJogada)
-        {
-            continuarJogada = false;
-
-            Jogador jogadorRoubado = VerificarRoubo(jogadorAtual, cartaDaVez);
-            if (jogadorRoubado != null)
-            {
-                ExecutarRoubo(jogadorAtual, jogadorRoubado, cartaDaVez);
-
-                _logger.RegistrarToposDosMontes(Jogadores);
-                _logger.RegistrarCartasDescarte(AreaDescarte);
-
-                cartaDaVez = JogadaPadrao();
-                if (cartaDaVez == null)
-                    return;
-
-                continuarJogada = true;
-                continue;
-            }
-
-            Carta cartaDescarte = AreaDescarte.ProcurarPorValor(cartaDaVez.Valor);
-            if (cartaDescarte != null)
-            {
-                ExecutarCapturaDescarte(jogadorAtual, cartaDaVez, cartaDescarte);
-
-                _logger.RegistrarToposDosMontes(Jogadores);
-                _logger.RegistrarCartasDescarte(AreaDescarte);
-
-                cartaDaVez = JogadaPadrao();
-                if (cartaDaVez == null)
-                    return;
-
-                continuarJogada = true;
-                continue;
-            }
-
-            if (PodeEmpilhar(jogadorAtual, cartaDaVez))
-            {
-                ExecutarEmpilhamento(jogadorAtual, cartaDaVez);
-
-                _logger.RegistrarToposDosMontes(Jogadores);
-                _logger.RegistrarCartasDescarte(AreaDescarte);
-
-                cartaDaVez = JogadaPadrao();
-                if (cartaDaVez == null)
-                    return;
-
-                continuarJogada = true;
-                continue;
-            }
-
-            ExecutarDescarte(jogadorAtual, cartaDaVez);
-
             _logger.RegistrarToposDosMontes(Jogadores);
             _logger.RegistrarCartasDescarte(AreaDescarte);
-
-            return;
         }
-    }
 
-    public Carta JogadaPadrao()
-    {
-        Carta carta = MonteCompra.Comprar();
-
-        if (carta != null)
-            _logger.Registrar($"Jogador comprou a carta: {carta}");
-
-        return carta;
-    }
-
-    private Jogador VerificarRoubo(Jogador jogadorAtual, Carta cartaDaVez)
-    {
-        List<Jogador> candidatos = new List<Jogador>();
-        int maiorMonte = -1;
-
-        foreach (Jogador j in Jogadores)
+        private Jogador VerificarRoubo(Jogador jogadorAtual, Carta carta)
         {
-            if (j == null || j == jogadorAtual)
-                continue;
+            List<Jogador> candidatos = new List<Jogador>();
+            int maior = -1;
 
-            Carta topo = j.TopoDoMonteJogador();
-            if (topo == null || topo.Valor != cartaDaVez.Valor)
-                continue;
-
-            int tamanho = j.TamanhoDoMonteJogador();
-
-            if (tamanho > maiorMonte)
+            for (int i = 0; i < Jogadores.Length; i++)
             {
-                maiorMonte = tamanho;
-                candidatos.Clear();
-                candidatos.Add(j);
+                Jogador j = Jogadores[i];
+
+                if (j == jogadorAtual)
+                    continue;
+
+                Carta topo = j.TopoDoMonteJogador();
+                if (topo == null)
+                    continue;
+
+                if (topo.Valor == carta.Valor)
+                {
+                    int tam = j.TamanhoDoMonteJogador();
+
+                    if (tam > maior)
+                    {
+                        maior = tam;
+                        candidatos.Clear();
+                        candidatos.Add(j);
+                    }
+                    else if (tam == maior)
+                    {
+                        candidatos.Add(j);
+                    }
+                }
             }
-            else if (tamanho == maiorMonte)
-            {
-                candidatos.Add(j);
-            }
+
+            if (candidatos.Count == 0)
+                return null;
+
+            int escolha = random.Next(0, candidatos.Count);
+            return candidatos[escolha];
         }
 
-        if (candidatos.Count == 0)
-            return null;
-
-        int escolha = random.Next(0, candidatos.Count);
-        return candidatos[escolha];
-    }
-
-    private void ExecutarRoubo(Jogador quemRouba, Jogador quemPerde, Carta cartaDaVez)
-    {
-        List<Carta> cartasRoubadas = quemPerde.RetirarMonte();
-
-        quemRouba.ReceberCartasRoubadas(cartasRoubadas);
-        quemRouba.ReceberCarta(cartaDaVez);
-
-        RegistrarRoubo(quemRouba, quemPerde);
-    }
-
-    private void ExecutarCapturaDescarte(Jogador jogador, Carta cartaDaVez, Carta descarte)
-    {
-        AreaDescarte.Remover(descarte);
-
-        jogador.ReceberCarta(descarte);
-        jogador.ReceberCarta(cartaDaVez);
-
-        RegistrarCapturaDescarte(jogador, descarte);
-    }
-
-    private bool PodeEmpilhar(Jogador jogador, Carta cartaDaVez)
-    {
-        Carta topo = jogador.TopoDoMonteJogador();
-
-        if (topo == null)
-            return false;
-
-        return topo.Valor == cartaDaVez.Valor;
-    }
-
-    private void ExecutarEmpilhamento(Jogador jogador, Carta carta)
-    {
-        jogador.ReceberCarta(carta);
-        _logger.Registrar($"{jogador.Nome} empilhou a carta no próprio monte.");
-    }
-
-    private void ExecutarDescarte(Jogador jogador, Carta carta)
-    {
-        AreaDescarte.Adicionar(carta);
-        RegistrarDescarte(jogador, carta);
-    }
-
-    public Jogador MaiorMonte()
-    {
-        Jogador maior = null;
-        int maiorQtd = -1;
-
-        foreach (Jogador jogador in Jogadores)
+        private void ExecutarRoubo(Jogador quemRouba, Jogador quemPerde, Carta cartaDaVez)
         {
-            int qtd = jogador.TamanhoDoMonteJogador();
-            if (qtd > maiorQtd)
-            {
-                maiorQtd = qtd;
-                maior = jogador;
-            }
+            List<Carta> monte = quemPerde.RetirarMonte();
+            quemRouba.ReceberCartasRoubadas(monte);
+            quemRouba.ReceberCarta(cartaDaVez);
+
+            _logger.Registrar(quemRouba.Nome + " ROUBOU o monte de " + quemPerde.Nome);
         }
 
-        if (maior != null)
-            _logger.Registrar($"Jogador com maior monte no momento: {maior.Nome} ({maiorQtd} cartas)");
-
-        return maior;
-    }
-
-    private string RankingFinal()
-    {
-        string ranking = RankingService.GerarRankingFinal(Jogadores);
-        _logger.Registrar(ranking);
-        return ranking;
-    }
-
-    public IEnumerable<int> PesquisarHistoricoJogador(string nomeJogador)
-    {
-        Jogador pesquisado = null;
-        IEnumerable<int> posicoes = null;
-        foreach (Jogador j in Jogadores)
+        private void ExecutarCapturaDescarte(Jogador jogador, Carta cartaDaVez, Carta cartaDescarte)
         {
-            if (j.Nome.Equals(nomeJogador))
-            {
-                pesquisado = j;
-                posicoes = pesquisado.GetHistorico();
-            }
+            AreaDescarte.Remover(cartaDescarte);
+            jogador.ReceberCarta(cartaDescarte);
+            jogador.ReceberCarta(cartaDaVez);
+
+            _logger.Registrar(jogador.Nome + " capturou carta do descarte: " + cartaDescarte.ToString());
         }
 
-        if (posicoes != null)
-            foreach (int posicao in posicoes)
+        private bool PodeEmpilhar(Jogador jogador, Carta carta)
+        {
+            Carta topo = jogador.TopoDoMonteJogador();
+            if (topo == null)
+                return false;
+
+            return topo.Valor == carta.Valor;
+        }
+
+        private void ExecutarDescarte(Jogador jogador, Carta carta)
+        {
+            AreaDescarte.Adicionar(carta);
+            _logger.Registrar(jogador.Nome + " descartou: " + carta.ToString());
+        }
+
+        public void SalvarLogAutomatico()
+        {
+            string pasta = "Logs";
+            if (!Directory.Exists(pasta))
+                Directory.CreateDirectory(pasta);
+
+            string arquivo = "log_" + DateTime.Now.ToString("yyyyMMdd_HHmmss") + ".txt";
+            string caminho = Path.Combine(pasta, arquivo);
+            _logger.SalvarParaArquivo(caminho);
+        }
+
+        public void SalvarLogAutomatico(string nomeArquivo)
+        {
+            string pasta = "Logs";
+            if (!Directory.Exists(pasta))
+                Directory.CreateDirectory(pasta);
+
+            string caminho = Path.Combine(pasta, nomeArquivo);
+            _logger.SalvarParaArquivo(caminho);
+        }
+
+        public IEnumerable<int> PesquisarHistoricoJogador(string nome)
+        {
+            Jogador encontrado = null;
+
+            for (int i = 0; i < Jogadores.Length; i++)
             {
-                _logger.Registrar($"Historico do jogador {nomeJogador}: \n {posicao + "°, "}");
+                if (Jogadores[i].Nome.ToLower() == nome.ToLower())
+                {
+                    encontrado = Jogadores[i];
+                    break;
+                }
             }
 
-        return posicoes!;
-    }
+            if (encontrado == null)
+            {
+                _logger.Registrar("Jogador '" + nome + "' não encontrado.");
+                return new List<int>();
+            }
 
-    public void RegistrarRoubo(Jogador quemRouba, Jogador quemPerde)
-    {
-        _logger.Registrar($"{quemRouba.Nome} ROUBOU o monte de {quemPerde.Nome}");
-    }
+            IEnumerable<int> hist = encontrado.GetHistorico();
 
-    public void RegistrarCapturaDescarte(Jogador jogador, Carta carta)
-    {
-        _logger.Registrar($"{jogador.Nome} capturou carta do descarte: {carta}");
-    }
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine("Histórico das últimas posições de " + nome + ":");
 
-    public void RegistrarDescarte(Jogador jogador, Carta carta)
-    {
-        _logger.Registrar($"{jogador.Nome} descartou: {carta}");
-    }
+            int cont = 0;
+            foreach (int pos in hist)
+            {
+                sb.AppendLine(pos + "º lugar");
+                cont++;
+            }
 
-    public void SalvarLog(string nomeArquivo)
-    {
-        string pastaLogs = "Logs";
+            if (cont == 0)
+                sb.AppendLine("(sem histórico registrado)");
 
-        if (!Directory.Exists(pastaLogs))
-            Directory.CreateDirectory(pastaLogs);
+            _logger.Registrar(sb.ToString());
 
-        string caminhoFinal = pastaLogs + "/" + nomeArquivo;
-
-        _logger.SalvarParaArquivo(caminhoFinal);
-    }
-
-    public void SalvarLogAutomatico()
-    {
-        string pastaLogs = "Logs";
-
-        if (!Directory.Exists(pastaLogs))
-            Directory.CreateDirectory(pastaLogs);
-
-        string nomeArquivo = "log_" + DateTime.Now.ToString("yyyyMMdd_HHmmss") + ".txt";
-
-        string caminhoFinal = pastaLogs + "/" + nomeArquivo;
-
-        _logger.SalvarParaArquivo(caminhoFinal);
+            return hist;
+        }
     }
 }

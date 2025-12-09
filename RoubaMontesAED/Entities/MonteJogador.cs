@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-
 namespace RoubaMontesAED.Entities
 {
     public class MonteJogador
@@ -18,7 +15,9 @@ namespace RoubaMontesAED.Entities
                 return;
 
             foreach (Carta carta in cartas)
+            {
                 _pilha.Push(carta);
+            }
         }
 
         public void ColocarNoTopo(Carta carta)

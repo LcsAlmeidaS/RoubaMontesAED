@@ -1,6 +1,4 @@
 using RoubaMontesAED.Enums;
-using System;
-using System.Collections.Generic;
 
 namespace RoubaMontesAED.Entities
 {
